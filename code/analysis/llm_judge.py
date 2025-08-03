@@ -46,11 +46,11 @@ def llm_eval(test_data):
     for data in test_data:
         rand_var = random.random()
         if rand_var > 0.5:
-            ra = data["dskd_answer"]
-            rb = data["vanilla_answer"]
+            ra = data["baseline_answer"]
+            rb = data["mcw_kd_answer"]
         else:
-            ra = data["vanilla_answer"]
-            rb = data["dskd_answer"]
+            ra = data["mcw_kd_answer"]
+            rb = data["baseline_answer"]
         
         if data["input"] == "":
             question = data["instruction"]
@@ -111,17 +111,17 @@ if __name__ == "__main__":
         data = [json.loads(l) for l in f.readlines()]
 
     with open(dskd_path) as f:
-        dskd_answers = [json.loads(l) for l in f.readlines()]
+        baseline_answers = [json.loads(l) for l in f.readlines()]
 
     with open(vanilla_path) as f:
-        vanilla_answers = [json.loads(l) for l in f.readlines()]
+        mcw_kd_answers = [json.loads(l) for l in f.readlines()]
     
     test_samples = [
         {
             "instruction": data[i]["instruction"], 
             "input": data[i]["input"],
-            "dskd_answer": dskd_answers[i]["text"],
-            "vanilla_answer": vanilla_answers[i]["text"]
+            "baseline_answer": baseline_answers[i]["text"],
+            "mcw_kd_answer": mcw_kd_answers[i]["text"]
         } for i in range(len(data))
     ]
 

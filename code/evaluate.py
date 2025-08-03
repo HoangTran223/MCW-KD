@@ -4,15 +4,13 @@ import torch
 import torch.distributed as dist
 import deepspeed
 import json
-
-
 from arguments import get_args
-
 from utils import initialize, print_args
 from utils import print_rank
 from utils import save_rank
 from utils import get_tokenizer, get_model
 from evaluate_main import evaluate_main, prepare_dataset_main
+
 
 torch.set_num_threads(4)
 

@@ -1,10 +1,9 @@
 # MCW-KD: Multi-Cost Wasserstein Knowledge Distillation for Large Language Models
 
 ## 🔍 Overview
-Multi-Cost Wasserstein Knowledge Distillation (MCW-KD), a novel framework that enhances KD by simultaneously optimizing several cost functions within a unified OT formulation. This repo provides code for reproducing our experiments.
+Multi-Cost Wasserstein Knowledge Distillation (MCW-KD), a novel framework that enhances KD by simultaneously optimizing several cost matrices within a unified OT formulation. This repo provides code for reproducing our experiments.
 
 ## 🔧 Installation
-
 
 1. **Create and activate the conda environment**:
 
@@ -14,132 +13,194 @@ Multi-Cost Wasserstein Knowledge Distillation (MCW-KD), a novel framework that e
    pip install -r requirements.txt
    ```
 
-
 # Training
 
 ### For MCW-KD:
+
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
-bash scripts/gpt2/multicost_gpt2_base.sh
+bash scripts/gpt2/MCW_KD.sh
+```
+
+For GPT2-340M with teacher is Qwen1.5, run:
+```bash
+bash scripts/gpt_medium/MCW_KD.sh
 ```
 
 For GPT2-120M with teacher is GPT2-1.5B, run:
 ```bash
-bash scripts/gpt2_gpt2/multicost_gpt2_base.sh
+bash scripts/gptxl_gpt2/MCW_KD.sh
 ```
 
 For TinyLLaMA-1.1B with teacher is Mistral-7B, run:
 ```bash
-bash scripts/tinyllama/multicost_tinyllama.sh
+bash scripts/tinyllama/MCW_KD.sh
 ```
 
 For GPT2-1.5B with teacher is Qwen2.5-7B-Instruct, run:
 ```bash
-bash scripts/gptxl/multicost_gptxl.sh
+bash scripts/gptxl/MCW_KD.sh
 ```
 
-### Baseline: Multi-Level Optimal Transport
+For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
+```bash
+bash scripts/opt/MCW_KD.sh
+```
+
+
+### Baseline: Multi-Level Optimal Transport for Universal Cross-Tokenizer (AAAI 2025)
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
-bash scripts/gpt2/multilevel_ot_gpt2_base.sh
+bash scripts/gpt2/MultiLevelOT.sh
+```
+
+For GPT2-340M with teacher is Qwen1.5, run:
+```bash
+bash scripts/gpt_medium/MultiLevelOT.sh
 ```
 
 For GPT2-120M with teacher is GPT2-1.5B, run:
 ```bash
-bash scripts/gpt2_gpt2/multilevel_ot_gpt2_base.sh
+bash scripts/gptxl_gpt2/MultiLevelOT.sh
 ```
 
 For TinyLLaMA-1.1B with teacher is Mistral-7B, run:
 ```bash
-bash scripts/tinyllama/multilevel_ot_tinyllama.sh
+bash scripts/tinyllama/MultiLevelOT.sh
 ```
 
 For GPT2-1.5B with teacher is Qwen2.5-7B-Instruct, run:
 ```bash
-bash scripts/gptxl/multilevel_ot_gptxl.sh
+bash scripts/gptxl/MultiLevelOT.sh
 ```
 
-### Baseline: Dual-Space KD with CMA
+For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
+```bash
+bash scripts/opt/MultiLevelOT.sh
+```
+
+### Baseline: Dual-Space Knowledge Distillation
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
-bash scripts/gpt2/dskd_cma_gpt2_base.sh
+bash scripts/gpt2/DSKD.sh
+```
+
+For GPT2-340M with teacher is Qwen1.5, run:
+```bash
+bash scripts/gpt_medium/DSKD.sh
 ```
 
 For GPT2-120M with teacher is GPT2-1.5B, run:
 ```bash
-bash scripts/gpt2_gpt2/dskd_cma_gpt2_base.sh
+bash scripts/gptxl_gpt2/DSKD.sh
 ```
 
 For TinyLLaMA-1.1B with teacher is Mistral-7B, run:
 ```bash
-bash scripts/tinyllama/dskd_cma_tinyllama.sh
+bash scripts/tinyllama/DSKD.sh
 ```
 
 For GPT2-1.5B with teacher is Qwen2.5-7B-Instruct, run:
 ```bash
-bash scripts/gptxl/dskd_cma_gptxl.sh
+bash scripts/gptxl/DSKD.sh
 ```
+
+For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
+```bash
+bash scripts/opt/DSKD.sh
+```
+
 
 ### Baseline: Logits Alignment by Minimum Edit Distance 
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
-bash scripts/gpt2/minedit_gpt2_base.sh
+bash scripts/gpt2/MinED.sh
+```
+
+For GPT2-340M with teacher is Qwen1.5, run:
+```bash
+bash scripts/gpt_medium/MinED.sh
 ```
 
 For GPT2-120M with teacher is GPT2-1.5B, run:
 ```bash
-bash scripts/gpt2_gpt2/minedit_gpt2_base.sh
+bash scripts/gptxl_gpt2/MinED.sh
 ```
 
 For TinyLLaMA-1.1B with teacher is Mistral-7B, run:
 ```bash
-bash scripts/tinyllama/minedit_tinyllama.sh
+bash scripts/tinyllama/MinED.sh
 ```
 
 For GPT2-1.5B with teacher is Qwen2.5-7B-Instruct, run:
 ```bash
-bash scripts/gptxl/minedit_gptxl.sh
+bash scripts/gptxl/MinED.sh
+```
+
+For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
+```bash
+bash scripts/opt/MinED.sh
 ```
 
 ### Baseline: Universal Logit Distillation 
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
-bash scripts/gpt2/uld_gpt2_base.sh
+bash scripts/gpt2/ULD.sh
+```
+
+For GPT2-340M with teacher is Qwen1.5, run:
+```bash
+bash scripts/gpt_medium/ULD.sh
 ```
 
 For GPT2-120M with teacher is GPT2-1.5B, run:
 ```bash
-bash scripts/gpt2_gpt2/uld_gpt2_base.sh
+bash scripts/gptxl_gpt2/ULD.sh
 ```
 
 For TinyLLaMA-1.1B with teacher is Mistral-7B, run:
 ```bash
-bash scripts/tinyllama/uld_tinyllama.sh
+bash scripts/tinyllama/ULD.sh
 ```
 
 For GPT2-1.5B with teacher is Qwen2.5-7B-Instruct, run:
 ```bash
-bash scripts/gptxl/uld_gptxl.sh
+bash scripts/gptxl/ULD.sh
+```
+
+For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
+```bash
+bash scripts/opt/ULD.sh
 ```
 
 ### SFT for student models
 For GPT2-base (full fine-tuning), run:
 ```bash
-bash scripts/gpt2/sft_gpt2_base.sh
+bash scripts/gpt2/SFT.sh
+```
+
+For GPT2-base (full fine-tuning), run:
+```bash
+bash scripts/gpt_medium/SFT.sh
 ```
 
 For TinyLLaMA-1.1B (LoRA), run:
 ```bash
-bash scripts/tinyllama/sft_tinyllama.sh
+bash scripts/tinyllama/SFT.sh
 ```
 
 For GPT2-1.5B (LoRA), run:
 ```bash
-bash scripts/gptxl/sft_gptxl.sh
+bash scripts/gptxl/SFT.sh
+```
+
+For OPT-2.7B (LoRA), run:
+```bash
+bash scripts/opt/SFT.sh
 ```
 
 ## Evaluation
@@ -156,6 +217,11 @@ bash scripts/eval/run_eval_lora.sh ${LORA_ADAPTER_PATH} ${EVAL_BATCH_SIZE}
 
 Similarly, `LORA_ADAPTER_PATH` is the **absolute path** of the LoRA adapter.
 
+### GPT-4 Evaluation
+To perform evaluation with GPT-4, run:
+```bash
+python code/analysis/llm_judge
+```
 
 ## 📜 License
 

@@ -6,11 +6,7 @@
     },
     "zero_allow_untested_optimizer": true,
     "bf16": {
-        "enabled": true,
-        "loss_scale": 0,
-        "initial_scale_power": 11,
-        "loss_scale_window": 2000,
-        "hysteresis": 4
+        "enabled": true
     },
     "fp16": {
         "enabled": false

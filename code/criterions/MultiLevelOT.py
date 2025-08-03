@@ -52,11 +52,9 @@ def greedy_algorithm_adjust_s(t, s):
     batch_size, T, k = t.shape
     _, n, _ = s.shape
     
-    # Initialize the adjusted source tensor
     s_adjusted = torch.zeros_like(t)
     
     for b in range(batch_size):
-        # Initialize set of available source indices for each batch
         available_indices = list(range(n))
         
         for i in range(T):
@@ -87,8 +85,6 @@ class MultiLevelOT(CrossEntropyLoss):
         self.student_temperature = 2.0
         self.teacher_temperature = 2.0
         self.f = 1
-        
-        self.ce_ = args.ce_weight
         self.kd_rate = args.kd_rate
 
     def forward(
@@ -127,7 +123,7 @@ class MultiLevelOT(CrossEntropyLoss):
             outputs, teacher_outputs, output_data, distiller, log
         )
 
-        total_loss = self.ce_ * loss_ce + self.kd_rate * kd_loss
+        total_loss = loss_ce + self.kd_rate * kd_loss
 
         log["loss"] = total_loss
 
@@ -194,7 +190,7 @@ class MultiLevelOT(CrossEntropyLoss):
             ot_loss = sinkhorn(student_probs, teacher_probs) * 0.1
         elif self.f == 2:
             adjusted_student_probs = greedy_algorithm_adjust_s(teacher_probs, student_probs)
-            ot_loss = sinkhorn(adjusted_student_probs, teacher_probs)
+            ot_loss = sinkhorn(adjusted_student_probs, teacher_probs) * 0.1
         else:
             raise ValueError("Invalid value for f. Use 1 or 2.")
 

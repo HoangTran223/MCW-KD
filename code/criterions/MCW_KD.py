@@ -31,7 +31,7 @@ class MCW_KD(VariousDivergence):
         self.top_k_vocab = args.top_k_vocab
         self.total_steps = args.total_iters
         self.current_step = 0
-        self.sigma = 0.7
+        self.sigma = 2.0
         self._id_mapping_cache = None
 
         d_s = args.hidden_dim_student
@@ -44,7 +44,6 @@ class MCW_KD(VariousDivergence):
 
         print(f"kd_rate: {self.kd_rate}")
         print(f"top_k_vocab: {self.top_k_vocab}")
-
 
     def forward(
         self, 
@@ -82,9 +81,9 @@ class MCW_KD(VariousDivergence):
         loss_ce = self.compute_cross_entropy_loss(outputs.logits, output_data["label"], log=log)[0]
         log["loss_ce"] = loss_ce
 
-        hidden_state_student = outputs.hidden_states[-1] 
+        hidden_state_student = outputs.hidden_states[-1]  # (batch_size, seq_len_student, hidden_dim_student)
         # hidden_state_student_first = outputs.hidden_states[0]
-        hidden_state_teacher = teacher_outputs.hidden_states[-1] 
+        hidden_state_teacher = teacher_outputs.hidden_states[-1]  # (batch_size, seq_len_teacher, hidden_dim_teacher)
         # hidden_state_teacher_first = teacher_outputs.hidden_states[0]
         
         pad_mask = input_data["attention_mask"].bool()
@@ -126,9 +125,6 @@ class MCW_KD(VariousDivergence):
             means = value.mean(dim=-1, keepdim=True)
             stds = value.std(dim=-1, keepdim=True)
             return value / (stds + 0.0001)
-
-        student_logits = normalize(student_logits).to(self.dtype)
-        teacher_logits = normalize(teacher_logits).to(self.dtype)
 
         student_topk_logits, _ = student_logits.sort(dim=-1, descending=True)
         teacher_topk_logits, _ = teacher_logits.sort(dim=-1, descending=True)
@@ -229,7 +225,6 @@ class MCW_KD(VariousDivergence):
                     start = max(i - window, 0)
                     end = min(i + window + 1, seq.size(0))
                     ctx[i] = seq[start:end].mean(dim=0)
-                
                 return ctx.to(self.dtype)
             
             ctx_s = compute_context_reprs(student_seq, self.window_size)  
@@ -246,7 +241,6 @@ class MCW_KD(VariousDivergence):
             for i, C in enumerate(cost_matrices):
                 if C.shape != cost_matrices[0].shape:
                     raise ValueError(f"Cost matrix {i} has shape {C.shape}, expected {cost_matrices[0].shape}")
-                    
             weights = self.cost_weights_hidden
             log["avg_c2_last"] = C2.mean().item()
             log["avg_c5_last"] = C5.mean().item()
@@ -268,6 +262,7 @@ class MCW_KD(VariousDivergence):
             if isinstance(values, torch.Tensor):
                 values = values.tolist()
             if not isinstance(values, list):
+                logger.error(f"Expected list, got {type(values)}: {values}")
                 return None
             try:
                 result = []
@@ -277,9 +272,11 @@ class MCW_KD(VariousDivergence):
                     elif isinstance(x, (list, tuple)):
                         result.append(float(np.mean(x)))
                     else:
+                        logger.error(f"Invalid value in list: {type(x)}, value: {x}")
                         return None
                 return result
             except (TypeError, ValueError) as e:
+                logger.error(f"Error converting to float: {e}, values: {values}")
                 return None
         
         cost_values_logits = to_scalar_list(cost_values_logits)
@@ -331,90 +328,69 @@ class MCW_KD(VariousDivergence):
             print(alpha_str_hidden)
 
 
-
     def compute_dual_space_kd_loss_with_cma(
         self, outputs, teacher_outputs, input_data, output_data, distiller, log
     ):
+        # Ground truth labels
         target = output_data["label"]
 
         teacher_target = output_data[f"teacher_{distiller.teacher_model_type}_label"]
         pad_mask = target.ne(self.padding_id)
         teacher_pad_mask = teacher_target.ne(self.padding_id)
 
-        hiddens = outputs.hidden_states[-1].to(self.dtype)
-        teacher_hiddens = teacher_outputs.hidden_states[-1].to(self.dtype)
+        hiddens = outputs.hidden_states[-1]
+        teacher_hiddens = teacher_outputs.hidden_states[-1]
 
-        if hasattr(distiller.student_model, "model") \
-            and hasattr(distiller.student_model.model, "embed_tokens"):
-            stu_embed_tokens = distiller.student_model.model.embed_tokens
-        elif hasattr(distiller.student_model, "model") \
-            and hasattr(distiller.student_model.model, "model") \
-            and hasattr(distiller.student_model.model.model, "embed_tokens"):
-            stu_embed_tokens = distiller.student_model.model.model.embed_tokens
-        elif hasattr(distiller.student_model, "transformer") \
-            and hasattr(distiller.student_model.transformer, "wte"):
-            stu_embed_tokens = distiller.student_model.transformer.wte
-        else:
-            raise NotImplementedError
+        def get_embed_tokens(model):
+            if hasattr(model, "base_model") and hasattr(model.base_model, "model"):
+                return get_embed_tokens(model.base_model.model)
+            if hasattr(model, "model") and hasattr(model.model, "decoder") and hasattr(model.model.decoder, "embed_tokens"):
+                return model.model.decoder.embed_tokens
+            if hasattr(model, "model") and hasattr(model.model, "embed_tokens"):
+                return model.model.embed_tokens
+            if hasattr(model, "transformer") and hasattr(model.transformer, "wte"):
+                return model.transformer.wte
+            if hasattr(model, "module"):
+                return get_embed_tokens(model.module)
+            raise NotImplementedError(f"Cannot find embed_tokens for model: {type(model)}")
 
-        if hasattr(distiller.student_model, "model") and hasattr(distiller.student_model.model, "embed_tokens"):
-            stu_embed_tokens = distiller.student_model.model.embed_tokens
-        elif hasattr(distiller.student_model, "model") and hasattr(distiller.student_model.model, "model") and hasattr(distiller.student_model.model.model, "embed_tokens"):
-            stu_embed_tokens = distiller.student_model.model.model.embed_tokens
-        elif hasattr(distiller.student_model, "transformer") and hasattr(distiller.student_model.transformer, "wte"):
-            stu_embed_tokens = distiller.student_model.transformer.wte
-        elif hasattr(distiller.student_model, "wte"): 
-            stu_embed_tokens = distiller.student_model.wte
-        else:
-            raise NotImplementedError("Student model structure not supported")
-
-        if hasattr(distiller.teacher_model, "model") and hasattr(distiller.teacher_model.model, "embed_tokens"):
-            tea_embed_tokens = distiller.teacher_model.model.embed_tokens
-        elif hasattr(distiller.teacher_model, "model") and hasattr(distiller.teacher_model.model, "model") and hasattr(distiller.teacher_model.model.model, "embed_tokens"):
-            tea_embed_tokens = distiller.teacher_model.model.model.embed_tokens
-        elif hasattr(distiller.teacher_model, "transformer") and hasattr(distiller.teacher_model.transformer, "wte"):
-            tea_embed_tokens = distiller.teacher_model.transformer.wte
-        elif hasattr(distiller.teacher_model, "wte"): 
-            tea_embed_tokens = distiller.teacher_model.wte
-        else:
-            raise NotImplementedError("Teacher model structure not supported")
-
+        stu_embed_tokens = get_embed_tokens(distiller.student_model)
+        tea_embed_tokens = get_embed_tokens(distiller.teacher_model)
 
         formal_target = torch.where(pad_mask, target, torch.zeros_like(target))
         formal_input = torch.where(pad_mask, input_data["input_ids"], torch.zeros_like(target))
-
-        stu_input_embeds = stu_embed_tokens(formal_input).detach().to(self.dtype)
-        stu_target_embeds = stu_embed_tokens(formal_target).detach().to(self.dtype)
+        stu_input_embeds = stu_embed_tokens(formal_input).detach()
+        stu_target_embeds = stu_embed_tokens(formal_target).detach()
 
         formal_teacher_target = torch.where(teacher_pad_mask, teacher_target, torch.zeros_like(teacher_target))
         formal_teacher_input = torch.where(teacher_pad_mask, input_data[f"teacher_{distiller.teacher_model_type}_input_ids"], torch.zeros_like(teacher_target))
+        tea_input_embeds = tea_embed_tokens(formal_teacher_input).detach()
+        tea_target_embeds = tea_embed_tokens(formal_teacher_target).detach()
 
-        tea_input_embeds = tea_embed_tokens(formal_teacher_input).detach().to(self.dtype)
-        tea_target_embeds = tea_embed_tokens(formal_teacher_target).detach().to(self.dtype)
-        stu_index_embeds = torch.cat([stu_input_embeds, stu_target_embeds], -1).to(self.dtype)
-        tea_index_embeds = torch.cat([tea_input_embeds, tea_target_embeds], -1).to(self.dtype)
+        stu_index_embeds = torch.cat([stu_input_embeds, stu_target_embeds], -1)
+        tea_index_embeds = torch.cat([tea_input_embeds, tea_target_embeds], -1)
 
         norm_tea_index_embeds = tea_index_embeds / tea_index_embeds.std()
         norm_tea_target_embeds = tea_target_embeds / tea_target_embeds.std()
         norm_teacher_hiddens = teacher_hiddens / teacher_hiddens.std()
 
-        stu_q_hiddens = distiller.projectors["query"](stu_index_embeds.to(self.dtype))
-        tea_k_hiddens = norm_tea_index_embeds.to(self.dtype)
+        stu_q_hiddens = distiller.projectors["query"](stu_index_embeds).float()
+        tea_k_hiddens = norm_tea_index_embeds.float()
 
-        stu_v_hiddens = distiller.projectors["s2t"](hiddens.to(self.dtype))
+        stu_v_hiddens = distiller.projectors["s2t"](hiddens).float()
         tea_v_hiddens = distiller.projectors["t2s"](
-            (norm_teacher_hiddens + norm_tea_target_embeds).to(self.dtype)
-        )
-
-        align = stu_q_hiddens.matmul(tea_k_hiddens.transpose(-1, -2)).to(self.dtype)
+            norm_teacher_hiddens + norm_tea_target_embeds
+        ).float()
+        
+        align = stu_q_hiddens.matmul(tea_k_hiddens.transpose(-1, -2))
         align = align / math.sqrt(2 * teacher_hiddens.shape[-1])
         align_mask = pad_mask.float().unsqueeze(-1) * teacher_pad_mask.float().unsqueeze(1)
         align = align + (1.0 - align_mask) * (-100000)
 
-        t2s_weight = torch.softmax(align, -1).to(self.dtype)
+        t2s_weight = torch.softmax(align, -1)        
         t2s_hiddens = t2s_weight.matmul(tea_v_hiddens).to(hiddens)
         t2s_logits = t2s_hiddens.matmul(
-            distiller.student_model.lm_head.weight.detach().transpose(-1, -2).to(self.dtype)
+            distiller.student_model.lm_head.weight.detach().transpose(-1, -2)
         )
 
         t2s_ce_loss = self.compute_cross_entropy_loss(t2s_logits, target)[0]
@@ -431,27 +407,27 @@ class MCW_KD(VariousDivergence):
             )
             t2s_kd_loss = (t2s_kd_loss * pad_mask * t2s_acc_mask).sum()
 
-            s2t_weight = torch.softmax(align.transpose(-1, -2), -1).to(self.dtype)
-            s2t_hiddens = s2t_weight.matmul(stu_v_hiddens).to(self.dtype)
+            s2t_weight = torch.softmax(align.transpose(-1, -2), -1)
+            s2t_hiddens = s2t_weight.matmul(stu_v_hiddens).to(hiddens)
             s2t_logits = s2t_hiddens.matmul(
-                distiller.teacher_model.lm_head.weight.detach().transpose(-1, -2).to(self.dtype)
-            )
-            s2t_kd_loss = self.compute_forward_kl_divergence(
-                s2t_logits, teacher_outputs.logits.to(self.dtype), teacher_target, reduction="none"
+            distiller.teacher_model.lm_head.weight.detach().transpose(-1, -2)
             )
 
+            s2t_kd_loss = self.compute_forward_kl_divergence(
+                s2t_logits, teacher_outputs.logits, teacher_target, reduction="none"
+            )
             s2t_kd_loss = (s2t_kd_loss * teacher_pad_mask).sum()
             s2t_acc = (s2t_logits.argmax(-1).eq(teacher_target) * teacher_pad_mask).sum() * pad_mask.sum() / teacher_pad_mask.sum()
 
             kd_loss = t2s_ce_loss + t2s_kd_loss + s2t_kd_loss
-
             log["t2s_kd_loss"] = t2s_kd_loss
             log["s2t_kd_loss"] = s2t_kd_loss
             log["s2t_acc"] = s2t_acc
+        else:
+            kd_loss = t2s_ce_loss
 
         log["kd_loss"] = kd_loss
         return kd_loss, log
-
 
 
 def dist_fn_edit(a, b):

@@ -8,8 +8,6 @@ def pairwise_euclidean_distance(x, y):
 
 
 def pairwise_cosin_distance(a, b, eps=1e-8):
-    # a = a.float()
-    # b = b.float()
     a_n, b_n = a.norm(dim=1)[:, None], b.norm(dim=1)[:, None]
     a_norm = a / torch.max(a_n, eps * torch.ones_like(a_n, dtype=torch.bfloat16))
     b_norm = b / torch.max(b_n, eps * torch.ones_like(b_n, dtype=torch.bfloat16))
@@ -19,11 +17,7 @@ def pairwise_cosin_distance(a, b, eps=1e-8):
     return sim_mt
 
 def pairwise_attention_distance(x, y, eps=1e-8):
-    # x = x.float()
-    # y = y.float()
-    
     d = x.shape[1]
-   
     sim_mt = torch.mm(x, y.transpose(0, 1)) / math.sqrt(d)
     attention_weights = torch.softmax(sim_mt, dim=1)
 
@@ -40,20 +34,12 @@ class ETP(nn.Module):
         self.ot_dist_type = ot_dist_type
 
     def forward(self, M):
-        
         device = M.device
         dtype = M.dtype
-        # Sinkhorn's algorithm
-
-        # Initialize a and b, also in bf16
         a = (torch.ones(M.shape[0]) / M.shape[0]).unsqueeze(1).to(device).to(dtype=dtype)
         b = (torch.ones(M.shape[1]) / M.shape[1]).unsqueeze(1).to(device).to(dtype=dtype)
-        # a = (torch.ones(M.shape[0]) / M.shape[0]).unsqueeze(1).to(device)
-        # b = (torch.ones(M.shape[1]) / M.shape[1]).unsqueeze(1).to(device)
-
         u = (torch.ones_like(a) / a.size()[0]).to(device).to(dtype=dtype)
 
-        # K matrix
         K = torch.exp(-M * self.sinkhorn_alpha).to(dtype=dtype)
         err = 1
         cpt = 0

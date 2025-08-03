@@ -238,7 +238,6 @@ def get_teacher_model(args, device):
 
 
 def get_optimizer_params(args, model: nn.Module):
-    # taken from https://github.com/facebookresearch/SpanBERT/blob/0670d8b6a38f6714b85ea7a033f16bd8cc162676/code/run_tacred.py
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'ln_f.weight', 'ln_1.weight', 'ln_2.weight', 'ln_cross_attn']
     optimizer_grouped_parameters = [
@@ -252,7 +251,6 @@ def get_optimizer_params(args, model: nn.Module):
 
 
 def get_optimizer_params_peft(args, model: nn.Module):
-    # taken from https://github.com/facebookresearch/SpanBERT/blob/0670d8b6a38f6714b85ea7a033f16bd8cc162676/code/run_tacred.py
     param_optimizer = list(model.named_parameters())
     optimizer_grouped_parameters = [
         {'params': [p for n, p in param_optimizer if p.requires_grad]},
@@ -274,9 +272,6 @@ def get_tokenizer(args):
 
 
 def get_optimizer(args, model):
-    """Set up the optimizer."""
-
-    # Build parameter groups (weight decay and non-decay).
     while isinstance(model, DDP):
         model = model.module
 
@@ -284,8 +279,7 @@ def get_optimizer(args, model):
         param_groups = get_optimizer_params_peft(args, model)
     else:
         param_groups = get_optimizer_params(args, model)
-
-    # Use AdamW.
+        
     optimizer = AdamW(param_groups, lr=args.lr, weight_decay=args.weight_decay)
     log_rank(f'Optimizer = {optimizer.__class__.__name__}')
     return optimizer
