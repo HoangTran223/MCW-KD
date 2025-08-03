@@ -80,7 +80,7 @@ For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
 bash scripts/opt/MultiLevelOT.sh
 ```
 
-### Baseline: Dual-Space Knowledge Distillation
+### Baseline: Dual-Space Knowledge Distillation (EMNLP 2024)
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
@@ -113,7 +113,7 @@ bash scripts/opt/DSKD.sh
 ```
 
 
-### Baseline: Logits Alignment by Minimum Edit Distance 
+### Baseline: Logits Alignment by Minimum Edit Distance (ICLR 2024)
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
@@ -145,7 +145,7 @@ For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
 bash scripts/opt/MinED.sh
 ```
 
-### Baseline: Universal Logit Distillation 
+### Baseline: Universal Logit Distillation (TMLR 2025)
 
 For GPT2-120M with teacher is Qwen1.5, run:
 ```bash
@@ -177,7 +177,7 @@ For OPT-2.7B with teacher is Qwen2.5-7B-Instruct, run:
 bash scripts/opt/ULD.sh
 ```
 
-### SFT for student models
+### SFT for Student Models
 For GPT2-base (full fine-tuning), run:
 ```bash
 bash scripts/gpt2/SFT.sh
