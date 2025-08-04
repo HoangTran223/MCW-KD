@@ -220,7 +220,13 @@ Similarly, `LORA_ADAPTER_PATH` is the **absolute path** of the LoRA adapter.
 ### GPT-4 Evaluation
 To perform evaluation with GPT-4, run:
 ```bash
-python code/analysis/llm_judge
+python code/analysis/llm_judge.py
+```
+
+### Representation Similarity between Teacher and Student Model
+To calculate representation similarity between 2 models, run:
+```bash
+python code/analysis/cal_structure_dist.py
 ```
 
 ## 📜 License
