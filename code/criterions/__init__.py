@@ -1,15 +1,11 @@
 from .cross_entropy_loss import CrossEntropyLoss
 from .various_divergence import VariousDivergence
 from .MCW_KD import MCW_KD
+from .MCW_KD_Dual import MCW_KD_Dual
 from .DSKD import DualSpaceKDWithCMA
 from .ULD import UniversalLogitDistillation
 from .MinED import MinEditDisForwardKLD
-from .dual_space_kd_new_kb1 import DualSpaceKDWithCMA_OT_1
-from .dual_space_kd_new_kb2 import DualSpaceKDWithCMA_OT_2
-from .ULD_1 import UniversalLogitDistillation_1
-from .MinED_1 import MinEditDisForwardKLD_1
 from .MultiLevelOT import MultiLevelOT
-from .MultiLevelOT_1 import MultiLevelOT_1
 
 criterion_list = {
     "cross_entropy": CrossEntropyLoss,
@@ -18,6 +14,7 @@ criterion_list = {
     "universal_logit_distillation": UniversalLogitDistillation,
     "min_edit_dis_kld": MinEditDisForwardKLD,
     "MCW_KD": MCW_KD,
+    "MCW_KD_Dual": MCW_KD_Dual,
     "MultiLevelOT": MultiLevelOT
 }
 
